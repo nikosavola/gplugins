@@ -385,85 +385,84 @@ def run_scattering_simulation_palace(
     return results
 
 
-# if __name__ == "__main__":
-#     import pyvista as pv
+if __name__ == "__main__":
+    import pyvista as pv
+    from gdsfactory.generic_tech import LAYER
+    from gdsfactory.technology.layer_stack import LayerLevel
 
-#     from gdsfactory.generic_tech import LAYER
-#     from gdsfactory.technology.layer_stack import LayerLevel
+    # Example LayerStack similar to doi:10.1103/PRXQuantum.4.010314
+    layer_stack = LayerStack(
+        layers=dict(
+            substrate=LayerLevel(
+                layer=LAYER.WAFER,
+                thickness=500,
+                zmin=0,
+                material="Si",
+                mesh_order=99,
+            ),
+            metal=LayerLevel(
+                layer=LAYER.WG,
+                thickness=200e-3,
+                zmin=500,
+                material="Nb",
+                mesh_order=2,
+            ),
+        )
+    )
+    material_spec = {
+        "Si": {"relative_permittivity": 11.45, "relative_permeability": 1},
+        "Nb": {"relative_permittivity": inf},
+        "vacuum": {"relative_permittivity": 1, "relative_permeability": 1},
+    }
 
-#     # Example LayerStack similar to doi:10.1103/PRXQuantum.4.010314
-#     layer_stack = LayerStack(
-#         layers=dict(
-#             substrate=LayerLevel(
-#                 layer=LAYER.WAFER,
-#                 thickness=500,
-#                 zmin=0,
-#                 material="Si",
-#                 mesh_order=99,
-#             ),
-#             metal=LayerLevel(
-#                 layer=LAYER.WG,
-#                 thickness=200e-3,
-#                 zmin=500,
-#                 material="Nb",
-#                 mesh_order=2,
-#             ),
-#         )
-#     )
-#     material_spec = {
-#         "Si": {"relative_permittivity": 11.45, "relative_permeability": 1},
-#         "Nb": {"relative_permittivity": inf},
-#         "vacuum": {"relative_permittivity": 1, "relative_permeability": 1},
-#     }
+    # Test capacitor
+    simulation_box = [[-200, -200], [200, 200]]
+    c = gf.Component("scattering_palace")
+    cap = c << interdigital_capacitor_enclosed(
+        metal_layer=LAYER.WG, gap_layer=LAYER.DEEPTRENCH, enclosure_box=simulation_box
+    )
+    c.add_ports(cap.ports)
+    # TODO ports to sides
+    substrate = gf.components.bbox(bbox=simulation_box, layer=LAYER.WAFER)
+    c << substrate
+    c.flatten()
 
-#     # Test capacitor
-#     simulation_box = [[-200, -200], [200, 200]]
-#     c = gf.Component("scattering_palace")
-#     cap = c << interdigital_capacitor_enclosed(
-#         metal_layer=LAYER.WG, gap_layer=LAYER.DEEPTRENCH, enclosure_box=simulation_box
-#     )
-#     c.add_ports(cap.ports)
-#     # TODO ports to sides
-#     substrate = gf.components.bbox(bbox=simulation_box, layer=LAYER.WAFER)
-#     c << substrate
-#     c.flatten()
+    results = run_scattering_simulation_palace(
+        c,
+        layer_stack=layer_stack,
+        driven_settings={
+            "MinFreq": 0.1,
+            "MaxFreq": 5,
+            "FreqStep": 2,
+        },
+        mesh_parameters=dict(
+            background_tag="vacuum",
+            background_padding=(0,) * 5 + (700,),
+            portnames=c.ports,
+            verbosity=1,
+            default_characteristic_length=200,
+            layer_portname_delimiter=(delimiter := "__"),
+            resolutions={
+                "bw": {
+                    "resolution": 14,
+                },
+                "substrate": {
+                    "resolution": 50,
+                },
+                "vacuum": {
+                    "resolution": 120,
+                },
+                **{
+                    f"bw{delimiter}{port}_vacuum": {
+                        "resolution": 8,
+                    }
+                    for port in c.ports
+                },
+            },
+        ),
+    )
+    print(results)
 
-#     results = run_scattering_simulation_palace(
-#         c,
-#         layer_stack=layer_stack,
-#         driven_settings={
-#             "MinFreq": 0.1,
-#             "MaxFreq": 5,
-#             "FreqStep": 2,
-#         },
-#         mesh_parameters=dict(
-#             background_tag="vacuum",
-#             background_padding=(0,) * 5 + (700,),
-#             portnames=c.ports,
-#             verbosity=1,
-#             default_characteristic_length=200,
-#             layer_portname_delimiter=(delimiter := "__"),
-#             resolutions={
-#                 "bw": {
-#                     "resolution": 14,
-#                 },
-#                 "substrate": {
-#                     "resolution": 50,
-#                 },
-#                 "vacuum": {
-#                     "resolution": 120,
-#                 },
-#                 **{
-#                     f"bw{delimiter}{port}_vacuum": {
-#                         "resolution": 8,
-#                     }
-#                     for port in c.ports
-#                 },
-#             },
-#         ),
-#     )
-#     print(results)
-
-#     if results.field_file_location:
-#         field = pv.read(results.field_file_location[0])
-#         field.slice_orthogonal().plot(scalars="Ue", cmap="turbo")
+    if results.field_file_location:
+        field = pv.read(results.field_file_location[0])
+        field.slice_orthogonal().plot(scalars="Ue", cmap="turbo")
