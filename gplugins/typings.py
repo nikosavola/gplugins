@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
 
+import pandas as pd
 from pydantic import BaseModel
 
 CDict = dict[tuple[str, str], float]
@@ -40,8 +40,8 @@ class ElectrostaticResults(BaseModel):
 class DrivenFullWaveResults(BaseModel):
     """Results class for driven full-wave simulations."""
 
-    scattering_matrix: Any  # TODO convert to SDict or similar
-    mesh_location: Path | None = None
+    scattering_matrix: pd.DataFrame  # TODO convert to SDict or similar
+    mesh_location: Sequence[Path] | None = None
     field_file_location: Sequence[Path] | None = None
 
 

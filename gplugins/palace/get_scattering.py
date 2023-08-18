@@ -5,7 +5,7 @@ import json
 import re
 import shutil
 import subprocess
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from math import inf
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -16,8 +16,9 @@ import gmsh
 import pandas as pd
 from gdsfactory.generic_tech import LAYER_STACK
 from gdsfactory.technology import LayerStack
-from gdsfactory.typings import DrivenFullWaveResults, RFMaterialSpec
 from numpy import isfinite
+
+from gplugins.typings import DrivenFullWaveResults, RFMaterialSpec
 
 DRIVE_JSON = "driven.json"
 DRIVEN_TEMPLATE = Path(__file__).parent / DRIVE_JSON
@@ -27,12 +28,12 @@ def _generate_json(
     simulation_folder: Path,
     name: str,
     bodies: dict[str, dict[str, Any]],
-    absorbing_surfaces: Sequence[str],
+    absorbing_surfaces: Collection[str],
     layer_stack: LayerStack,
     material_spec: RFMaterialSpec,
     element_order: int,
     physical_name_to_dimtag_map: dict[str, tuple[int, int]],
-    metal_surfaces: Sequence[str],
+    metal_surfaces: Collection[str],
     background_tag: str | None = None,
     edge_signals: Sequence[Sequence[str]] | None = None,
     internal_signals: Sequence[Sequence[str]] | None = None,
@@ -151,7 +152,7 @@ def _generate_json(
 
 
 def _palace(
-    simulation_folder: Path, json_files: Sequence[Path | str], n_processes: int = 1
+    simulation_folder: Path, json_files: Collection[Path | str], n_processes: int = 1
 ):
     """Run simulations with Palace."""
 
@@ -184,7 +185,7 @@ def _palace(
 def _read_palace_results(
     simulation_folder: Path,
     mesh_filename: str,
-    ports: Sequence[str],
+    ports: Collection[str],
     is_temporary: bool,
 ) -> DrivenFullWaveResults:
     """Fetch results from successful Palace simulations."""
