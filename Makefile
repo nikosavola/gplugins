@@ -3,7 +3,7 @@ install:
 	pip install -e .[dev,docs,database,devsim,femwell,gmsh,meow,meshwell,ray,sax,schematic,tidy3d,web]
 	pre-commit install
 
-dev: test-data meep gmsh elmer install
+dev: test-data meep gmsh elmer palace install
 
 gmsh:
 	sudo apt-get install -y python3-gmsh gmsh
@@ -16,6 +16,20 @@ elmer:
 	sudo apt-add-repository ppa:elmer-csc-ubuntu/elmer-csc-ppa
 	sudo apt-get update
 	sudo apt-get install -y elmerfem-csc mpich
+
+palace:
+	@if command -v singularity >/dev/null 2>&1; then \
+		singularity pull palace.sif oras://ghcr.io/awslabs/palace:main; \
+		echo "#!/bin/bash" > palace; \
+		echo 'singularity exec ~/palace.sif /opt/palace/bin/palace "$@"' >> palace; \
+		chmod +x palace; \
+	else \
+		sudo apt-get update; \
+		sudo apt-get install -y build-essential ca-certificates coreutils curl environment-modules gfortran git \
+		    gpg lsb-release python3 python3-distutils python3-venv unzip zip; \
+		git clone -c feature.manyFiles=true https://github.com/spack/spack.git; \
+		(export SPACK_ROOT=`pwd`/spack && . spack/share/spack/setup-env.sh && spack install palace); \
+	fi
 
 test:
 	pytest
