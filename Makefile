@@ -3,7 +3,7 @@ install:
 	pip install -e .[dev,docs,database,devsim,femwell,gmsh,meow,meshwell,ray,sax,schematic,tidy3d,web]
 	pre-commit install
 
-dev: test-data meep gmsh elmer install
+dev: test-data meep gmsh elmer palace install
 
 gmsh:
 	sudo apt-get install -y python3-gmsh gmsh
@@ -16,6 +16,15 @@ elmer:
 	sudo apt-add-repository ppa:elmer-csc-ubuntu/elmer-csc-ppa
 	sudo apt-get update
 	sudo apt-get install -y elmerfem-csc mpich
+
+palace:
+	sudo apt-get update
+	sudo apt-get install -y wget
+	wget https://raw.githubusercontent.com/awslabs/palace/main/singularity/singularity.def
+	sudo singularity build ~/palace.sif singularity.def; \
+	echo "#!/bin/bash" > palace; \
+	echo 'singularity exec ~/palace.sif /opt/palace/bin/palace "$@"' >> palace; \
+	chmod +x palace
 
 test:
 	pytest
