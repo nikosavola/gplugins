@@ -135,7 +135,7 @@ results = run_capacitive_simulation_elmer(
                 "resolution": 40,
             },
             **{
-                f"bw{port}": {
+                f"bw__{port}": {  # `__` is used as the layer–port delimiter for Elmer
                     "resolution": 20,
                     "DistMax": 30,
                     "DistMin": 10,

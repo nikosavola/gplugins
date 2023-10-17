@@ -132,7 +132,7 @@ results = run_capacitive_simulation_palace(
                 "resolution": 40,
             },
             **{
-                f"bw{port}": {
+                f"bw__{port}": {  # `__` is used as the layer–port delimiter for Palace
                     "resolution": 20,
                     "DistMax": 30,
                     "DistMin": 10,
