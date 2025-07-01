@@ -122,6 +122,7 @@ vlsir = [
   "vlsir",
   "vlsirtools"
 ]
+path_length_analysis = ["bokeh", "numba", "shapely"]
 
 [tool.codespell]
 ignore-words-list = 'te, te/tm, te, ba, fpr, fpr_spacing, ro, nd, donot, schem, Ue'
